@@ -42,13 +42,16 @@ namespace hvk
 			std::vector<ResourceHandle> passRenderTargets,
 			std::vector<ResourceHandle> passInputs,
 			std::vector<ResourceHandle> passOutputs,
-			const std::span<uint8_t>& vertexByteCode,
-			const std::span<uint8_t>& pixelByteCode,
-			const D3D12_INPUT_LAYOUT_DESC& inputLayout,
+			std::shared_ptr<ExecutionContext> executionContext,
 			RenderPassCallback callback)
 		{
 			assert(mFrameStarted);
-			mNodes.emplace_back(std::move(passRenderTargets), std::move(passInputs), std::move(passOutputs), callback);
+			mNodes.emplace_back(
+				std::move(passRenderTargets), 
+				std::move(passInputs), 
+				std::move(passOutputs), 
+				executionContext, 
+				callback);
 		}
 
 		void Framegraph::EndFrame()
@@ -116,7 +119,7 @@ namespace hvk
 				}
 
 				// call node callback
-				node.mCallback(commandList, inputMap, outputMap);
+				node.mCallback(commandList, *node.mExecutionContext, inputMap, outputMap);
 			}
 
 			mNodes.clear();

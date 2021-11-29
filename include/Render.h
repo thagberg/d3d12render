@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cassert>
 #include <vector>
+#include <span>
 //#include <dxcapi.h>
 
 using namespace Microsoft::WRL;
@@ -72,10 +73,8 @@ namespace hvk
 			ComPtr<ID3D12Device> device,
 			D3D12_INPUT_LAYOUT_DESC& inputLayout,
 			ComPtr<ID3D12RootSignature> rootSig,
-			const uint8_t* vertexShader,
-			size_t vertexShaderSize,
-			const uint8_t* pixelShader,
-			size_t pixelShaderSize,
+			std::span<uint8_t> vertexShader,
+			std::span<uint8_t> pixelShader,
 			ComPtr<ID3D12PipelineState>& psOut);
 
 		HRESULT CreateComputePipelineState(

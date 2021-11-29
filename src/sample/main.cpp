@@ -4,6 +4,8 @@
 #include <DirectXMath.h>
 #include <d3d12.h>
 
+#include <Render.h>
+
 #include "RenderContext.h"
 #include "Framegraph.h"
 #include "ShaderService.h"
@@ -100,8 +102,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	std::shared_ptr<hvk::render::shader::ShaderService> shaderService = hvk::render::shader::ShaderService::Initialize();
 
-	IDxcBlob* vertexByteCode;
-	IDxcBlob* pixelByteCode;
+	ComPtr<IDxcBlob> vertexByteCode;
+	ComPtr<IDxcBlob> pixelByteCode;
 
 	hvk::render::shader::ShaderDefinition vertexShaderDef{
 		L"testshaders\\vertex.hlsl",
@@ -126,6 +128,29 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	auto hr = shaderService->CompileShader(vertexShaderDef, &vertexByteCode);
 	hr = shaderService->CompileShader(pixelShaderDef, &pixelByteCode);
 
+	// create root sig
+	ComPtr<ID3D12RootSignature> rootSig;
+	{
+		hr = hvk::render::CreateRootSignature(renderCtx->GetDevice(), {}, {}, rootSig);
+	}
+
+	// create PSO
+	ComPtr<ID3D12PipelineState> pso;
+	{
+		hr = hvk::render::CreateGraphicsPipelineState(
+			renderCtx->GetDevice(),
+			vertexLayout,
+			rootSig,
+			std::span<uint8_t>(reinterpret_cast<uint8_t*>(vertexByteCode->GetBufferPointer()), vertexByteCode->GetBufferSize()),
+			std::span<uint8_t>(reinterpret_cast<uint8_t*>(pixelByteCode->GetBufferPointer()), pixelByteCode->GetBufferSize()),
+			pso
+		);
+
+	}
+
+	// create ExecutionContext
+	auto executionContext = std::make_shared<hvk::render::ExecutionContext>(pso, rootSig, vertexByteCode, pixelByteCode);
+
 	MSG msg;
 	bool running = true;
 
@@ -144,9 +169,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		framegraph.BeginFrame();
 
 		// insert pass
-		framegraph.Insert({ renderTarget }, { vertexBuffer }, {}, [&](
+		framegraph.Insert({ renderTarget }, { vertexBuffer }, {}, executionContext, [&](
 			//const hvk::render::RenderContext& ctx,
 			ComPtr<ID3D12GraphicsCommandList4> commandList,
+			const hvk::render::ExecutionContext& context,
 			const hvk::render::ResourceMapping& inputs,
 			const hvk::render::ResourceMapping& outputs) {
 

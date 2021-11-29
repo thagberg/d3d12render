@@ -227,10 +227,8 @@ namespace hvk
 			ComPtr<ID3D12Device> device, 
 			D3D12_INPUT_LAYOUT_DESC& inputLayout,
 			ComPtr<ID3D12RootSignature> rootSig,
-			const uint8_t* vertexShader,
-			size_t vertexShaderSize,
-			const uint8_t* pixelShader,
-			size_t pixelShaderSize,
+			std::span<uint8_t> vertexShader,
+			std::span<uint8_t> pixelShader,
 			ComPtr<ID3D12PipelineState>& psOut)
 		{
 			auto hr = S_OK;
@@ -268,8 +266,8 @@ namespace hvk
 			D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 			desc.InputLayout = inputLayout;
 			desc.pRootSignature = rootSig.Get();
-			desc.VS = { vertexShader, vertexShaderSize };
-			desc.PS = { pixelShader, pixelShaderSize };
+			desc.VS = { vertexShader.data(), vertexShader.size()};
+			desc.PS = { pixelShader.data(), pixelShader.size()};
 			desc.RasterizerState = raster;
 			desc.BlendState = blend;
 			desc.SampleMask = UINT_MAX; // TODO: learn more about this

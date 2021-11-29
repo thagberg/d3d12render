@@ -1,11 +1,12 @@
 #pragma once
 
-#include "ResourceManager.h"
-#include "RenderContext.h"
-
 #include <unordered_map>
 #include <functional>
 #include <vector>
+
+#include "ResourceManager.h"
+#include "RenderContext.h"
+#include "ExecutionContext.h"
 
 namespace hvk
 {
@@ -18,6 +19,7 @@ namespace hvk
 		//	const ResourceMapping& outputMap)>;
 		using RenderPassCallback = std::function<void(
 			ComPtr<ID3D12GraphicsCommandList4> commandList, 
+			const ExecutionContext& executionContext,
 			const ResourceMapping& inputMap, 
 			const ResourceMapping& outputMap)>;
 
@@ -26,7 +28,7 @@ namespace hvk
 			std::vector<ResourceHandle> mRenderTargets;
 			std::vector<ResourceHandle> mInputs;
 			std::vector<ResourceHandle> mOutputs;
-			//const RenderPassCallback& mCallback;
+			std::shared_ptr<ExecutionContext> mExecutionContext;
 			RenderPassCallback mCallback;
 		};
 
@@ -42,9 +44,7 @@ namespace hvk
 				std::vector<ResourceHandle> passRenderTargets,
 				std::vector<ResourceHandle> passInputs, 
 				std::vector<ResourceHandle> passOutputs, 
-				const std::span<uint8_t>& vertexByteCode,
-				const std::span<uint8_t>& pixelByteCode,
-				const D3D12_INPUT_LAYOUT_DESC& inputLayout,
+				std::shared_ptr<ExecutionContext> executionContext,
 				RenderPassCallback);
 			void EndFrame();
 			
