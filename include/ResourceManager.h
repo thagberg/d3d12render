@@ -49,10 +49,12 @@ namespace hvk
 			D3D12_RESOURCE_FLAGS mFlags;
 			D3D12MA::Allocation* mAllocation = nullptr;
 			ComPtr<ID3D12Resource> mResolvedResource = nullptr;
+			D3D12_RESOURCE_STATES mState = D3D12_RESOURCE_STATE_COMMON;
 		};
 
 		struct CopyDescription
 		{
+			ResourceType mType;
 			ResourceHandle mHandle;
 			ResourceHandle mCopyTo = kInvalidHandle;
 			D3D12MA::Allocation* mUploadAllocation = nullptr;
@@ -74,7 +76,7 @@ namespace hvk
 			//ResourceHandle CreateVertexBuffer(std::span<uint8_t> vertexData, uint32_t vertexStride);
 			//ResourceHandle UploadResource(uint64_t resourceSize, )
 			ResourceHandle CreateVertexBuffer(uint64_t size, ResourceUploadCallback);
-			ComPtr<ID3D12Resource> ResolveResource(ResourceHandle handle, bool uavRequired);
+			ResourceDescription* ResolveResource(ResourceHandle handle, bool uavRequired);
 			void PerformResourceCopies(ComPtr<ID3D12GraphicsCommandList4> commandList);
 			void Cleanup();
 

@@ -35,13 +35,11 @@ namespace hvk
 			for (auto resource : mResources)
 			{
 				resource.second.mAllocation->Release();
-				resource.second.mResolvedResource->Release();
 			}
 
 			for (auto resource : mCopyResources)
 			{
 				resource.mUploadAllocation->Release();
-				resource.mUploadResource->Release();
 			}
 		}
 

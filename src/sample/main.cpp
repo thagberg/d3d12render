@@ -176,11 +176,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 
-		if (framecount == 0) {
-			PIXCaptureParameters captureParams = {};
-			captureParams.GpuCaptureParameters.FileName = L"C://Users//timot//code//test.wpix";
-			PIXBeginCapture(PIX_CAPTURE_GPU, &captureParams);
-		}
+		//if (framecount == 0) {
+		//	PIXCaptureParameters captureParams = {};
+		//	captureParams.GpuCaptureParameters.FileName = L"C://Users//timot//code//test.wpix";
+		//	PIXBeginCapture(PIX_CAPTURE_GPU, &captureParams);
+		//}
 
 		framegraph.BeginFrame();
 
@@ -266,13 +266,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		swapchain->Present(1, 0);
 
-		if (framecount == 0) {
-			PIXEndCapture(false);
-		}
+		//if (framecount == 0) {
+		//	PIXEndCapture(false);
+		//}
 
 		frameIndex = swapchain->GetCurrentBackBufferIndex();
 		++framecount;
 	}
+
+	hvk::render::WaitForGraphics(renderCtx->GetDevice(), renderCtx->GetCommandQueue());
 
 	return msg.wParam;
 }
