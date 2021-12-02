@@ -25,6 +25,7 @@ target_link_directories(libRender PUBLIC ${RenderLibDir})
 target_link_libraries(libRender PUBLIC d3d12)
 target_link_libraries(libRender PUBLIC dxgi)
 target_link_libraries(libRender PUBLIC dxcompiler)
+target_link_libraries(libRender PUBLIC WinPixEventRuntime)
 
 add_custom_target(DeployRenderBin
 	COMMAND xcopy /E /I /Y \"${RenderBinDir}\" \"${CMAKE_BINARY_DIR}\")

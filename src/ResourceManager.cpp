@@ -69,11 +69,6 @@ namespace hvk
 			return newHandle;
 		}
 
-		//ResourceHandle ResourceManager::CreateVertexBuffer(std::span<uint8_t> vertexData, uint32_t vertexStride)
-		//{
-		//	ResourceHandle newHandle = mLastHandle++;
-		//}
-
 		ResourceHandle ResourceManager::CreateVertexBuffer(uint64_t size, ResourceUploadCallback uploadCallback)
 		{
 			ResourceHandle newHandle = mLastHandle++;
@@ -95,6 +90,7 @@ namespace hvk
 			uploadDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 			CopyDescription toCopy = {};
+			toCopy.mType = ResourceType::VertexBuffer;
 			toCopy.mHandle = newHandle;
 
 			HRESULT hr = mRenderContext->GetAllocator().CreateResource(
@@ -124,7 +120,7 @@ namespace hvk
 			return newHandle;
 		}
 
-		ComPtr<ID3D12Resource> ResourceManager::ResolveResource(ResourceHandle handle, bool uavRequired)
+		ResourceDescription* ResourceManager::ResolveResource(ResourceHandle handle, bool uavRequired)
 		{
 			auto foundResource = mResources.find(handle);
 			assert(foundResource != mResources.end());
@@ -177,7 +173,7 @@ namespace hvk
 					assert(SUCCEEDED(hr));
 				}
 				
-				return foundResource->second.mResolvedResource;
+				return &foundResource->second;
 			}
 
 			return nullptr;
@@ -199,7 +195,7 @@ namespace hvk
 					auto resourceDesc = copyDesc.mUploadResource->GetDesc();
 
 					ResourceDescription newResource = {
-						ResourceType::Texture,
+						copyDesc.mType,
 						resourceDesc.Width,
 						resourceDesc.Height,
 						resourceDesc.DepthOrArraySize,

@@ -12,7 +12,8 @@ namespace hvk
 {
 	namespace render
 	{
-		using ResourceMapping = std::unordered_map<ResourceHandle, ComPtr<ID3D12Resource>>;
+		//using ResourceMapping = std::unordered_map<ResourceHandle, ComPtr<ID3D12Resource>>;
+		using ResourceMapping = std::unordered_map<ResourceHandle, ResourceDescription&>;
 		//using RenderPassCallback = std::function<void(
 		//	const RenderContext& renderCtx, 
 		//	const ResourceMapping& inputMap, 
@@ -20,6 +21,7 @@ namespace hvk
 		using RenderPassCallback = std::function<void(
 			ComPtr<ID3D12GraphicsCommandList4> commandList, 
 			const ExecutionContext& executionContext,
+			const ResourceMapping& rtMap,
 			const ResourceMapping& inputMap, 
 			const ResourceMapping& outputMap)>;
 

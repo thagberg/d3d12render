@@ -25,11 +25,12 @@ namespace hvk
 			RenderContext();
 			~RenderContext();
 
-			ComPtr<ID3D12Device5> GetDevice() { return mDevice; }
-			ComPtr<IDXGIAdapter1> GetHardwareAdapter() { return mHardwareAdapter; }
-			ComPtr<ID3D12CommandQueue> GetCommandQueue() { return mCommandQueue; }
-			D3D12MA::Allocator& GetAllocator() { return *mAllocator; }
-			ComPtr<ID3D12GraphicsCommandList4> CreateGraphicsCommandList();
+			ComPtr<ID3D12Device5> GetDevice() const { return mDevice; }
+			ComPtr<IDXGIAdapter1> GetHardwareAdapter() const { return mHardwareAdapter; }
+			ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return mCommandQueue; }
+			D3D12MA::Allocator& GetAllocator() const { return *mAllocator; }
+			ComPtr<ID3D12GraphicsCommandList4> CreateGraphicsCommandList() const;
+			ComPtr<IDXGISwapChain3> CreateSwapchain(HWND window, uint8_t numFramebuffers, uint16_t width, uint16_t height) const;
 		private:
 			ComPtr<IDXGIFactory4> mFactory;
 			ComPtr<IDXGIAdapter1> mHardwareAdapter;

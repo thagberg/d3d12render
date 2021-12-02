@@ -19,7 +19,6 @@ namespace hvk
 			ExecutionContext(ComPtr<ID3D12PipelineState> pipelineState, ComPtr<ID3D12RootSignature> rootSig, ComPtr<IDxcBlob> vs = nullptr, ComPtr<IDxcBlob> ps = nullptr);
 			~ExecutionContext();
 
-		private:
 			ComPtr<ID3D12PipelineState> mPipelineState;
 			ComPtr<ID3D12RootSignature> mRootSig;
 			ComPtr<IDxcBlob> mVertexShader;

@@ -49,13 +49,23 @@ namespace hvk
 			mAllocator->Release();
 		}
 
-		ComPtr<ID3D12GraphicsCommandList4> RenderContext::CreateGraphicsCommandList()
+		ComPtr<ID3D12GraphicsCommandList4> RenderContext::CreateGraphicsCommandList() const
 		{
 			ComPtr<ID3D12GraphicsCommandList4> newCommandList;
 			HRESULT hr = hvk::render::CreateCommandList(mDevice, mCommandAllocator, nullptr, newCommandList);
 			assert(SUCCEEDED(hr));
 
 			return newCommandList;
+		}
+
+		ComPtr<IDXGISwapChain3> RenderContext::CreateSwapchain(HWND window, uint8_t numFramebuffers, uint16_t width, uint16_t height) const
+		{
+			ComPtr<IDXGISwapChain3> swapchain;
+
+			HRESULT hr = render::CreateSwapchain(mCommandQueue, mFactory, window, numFramebuffers, width, height, swapchain);
+			assert(SUCCEEDED(hr));
+
+			return swapchain;
 		}
 	}
 }
