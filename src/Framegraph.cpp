@@ -54,7 +54,7 @@ namespace hvk
 				callback);
 		}
 
-		void Framegraph::EndFrame()
+		void Framegraph::EndFrame(DescriptorAllocator& descriptorAllocator)
 		{
 			assert(mFrameStarted);
 			mFrameStarted = false;
@@ -64,12 +64,21 @@ namespace hvk
 			auto copyList = mRenderContext->CreateGraphicsCommandList();
 			mResourceManager->PerformResourceCopies(copyList);
 			copyList->Close();
-			ID3D12CommandList* commandLists[] = { copyList.Get() };
-			commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+			ID3D12CommandList* copyLists[] = { copyList.Get() };
+			commandQueue->ExecuteCommandLists(_countof(copyLists), copyLists);
 
 			// TEMP: use a fence to ensure resource copies have finished
 
 			auto commandList = mRenderContext->CreateGraphicsCommandList();
+
+			{
+				ID3D12DescriptorHeap* descriptorHeaps[] = {
+					descriptorAllocator.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV).Get(),
+					descriptorAllocator.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER).Get(),
+					//descriptorAllocator.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV).Get()
+				};
+				commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			}
 
 			for (const auto& node : mNodes)
 			{
@@ -127,6 +136,12 @@ namespace hvk
 					if (mappedInput.second.mType == ResourceType::VertexBuffer) {
 						stateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
 					}
+					else if (mappedInput.second.mType == ResourceType::IndexBuffer) {
+						stateAfter = D3D12_RESOURCE_STATE_INDEX_BUFFER;
+					}
+					else if (mappedInput.second.mType == ResourceType::ConstantBuffer) {
+						stateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+					}
 					if (mappedInput.second.mState != stateAfter) {
 						D3D12_RESOURCE_BARRIER inputBarrier = {};
 						inputBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -157,10 +172,11 @@ namespace hvk
 
 				// call node callback
 				node.mCallback(commandList, *node.mExecutionContext, rtMap, inputMap, outputMap);
-				commandList->Close();
-				ID3D12CommandList* commandLists[] = { commandList.Get() };
-				mRenderContext->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
 			}
+
+			commandList->Close();
+			ID3D12CommandList* commandLists[] = { commandList.Get() };
+			mRenderContext->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
 
 			mNodes.clear();
 		}

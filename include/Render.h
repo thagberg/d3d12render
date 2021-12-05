@@ -28,6 +28,12 @@ namespace hvk
 			Index32 = 32	
 		};
 
+		template <typename T, typename U>
+		T Align(T offset, U alignment)
+		{
+			return (offset + (alignment - 1)) & ~(alignment - 1);
+		}
+
 		void GetHardwareAdapter(IDXGIFactory4* pFactory, IDXGIAdapter1** ppAdapter);
 
 		HRESULT CreateFactory(ComPtr<IDXGIFactory4>& factoryOut);

@@ -76,6 +76,7 @@ namespace hvk
 			//ResourceHandle CreateVertexBuffer(std::span<uint8_t> vertexData, uint32_t vertexStride);
 			//ResourceHandle UploadResource(uint64_t resourceSize, )
 			ResourceHandle CreateVertexBuffer(uint64_t size, ResourceUploadCallback);
+			ResourceHandle CreateIndexBuffer(std::span<const uint16_t> indices);
 			ResourceDescription* ResolveResource(ResourceHandle handle, bool uavRequired);
 			void PerformResourceCopies(ComPtr<ID3D12GraphicsCommandList4> commandList);
 			void Cleanup();

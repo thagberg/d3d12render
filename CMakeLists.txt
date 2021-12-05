@@ -3,11 +3,13 @@ cmake_minimum_required(VERSION 3.17)
 set(RenderSourceDir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(RenderPublicIncludeDir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(RenderPrivateIncludeDir ${RenderPublicIncludeDir}/private)
+set(RenderSampleIncludeDir ${RenderPublicIncludeDir}/sample)
 set(RenderLibDir ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(RenderBinDir ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 file(GLOB RenderSources ${RenderSourceDir}/*.cpp)
 file(GLOB RenderHeaders ${RenderPublicIncludeDir}/*.h)
+file(GLOB RenderSampleHeaders ${RenderSampleIncludeDir}/*.h)
 
 add_library(libRender STATIC 
 	${RenderSources} 
@@ -34,7 +36,8 @@ add_dependencies(libRender DeployRenderBin)
 
 set(TestDir ${RenderSourceDir}/sample)
 file(GLOB TestShaders ${TestDir}/shaders/*.hlsl)
-add_executable(RenderFramegraphTest WIN32 ${TestDir}/main.cpp ${TestShaders})
+file(GLOB TestSources ${TestDir}/*.cpp)
+add_executable(RenderFramegraphTest WIN32 ${TestSources} ${RenderSampleHeaders} ${TestShaders})
 set_property(TARGET RenderFramegraphTest PROPERTY CXX_STANDARD 20)
 set_property(TARGET RenderFramegraphTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 target_link_libraries(RenderFramegraphTest PUBLIC libRender)

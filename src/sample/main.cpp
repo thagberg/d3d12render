@@ -14,6 +14,8 @@
 #include "Framegraph.h"
 #include "ShaderService.h"
 #include "DescriptorAllocator.h"
+#include "sample/DrawQuadNode.h"
+#include "sample/DrawCubeNode.h"
 
 WCHAR kWindowClass[] = L"FramegraphTest";
 WCHAR kWindowTitle[] = L"FramegraphTest";
@@ -24,18 +26,6 @@ struct Vertex
 {
     DirectX::XMFLOAT3 pos;
     DirectX::XMFLOAT3 TexCoord;
-};
-
-const uint8_t kNumVertices = 6;
-const Vertex kVertices[kNumVertices] =
-{
-	{DirectX::XMFLOAT3(-1.f, -1.f, 0.5f), DirectX::XMFLOAT3(0.f, 1.f, 0.f)},
-	{DirectX::XMFLOAT3(-1.f, 1.f, 0.5f), DirectX::XMFLOAT3(1.f, 0.f, 0.f)},
-	{DirectX::XMFLOAT3(1.f, -1.f, 0.5f), DirectX::XMFLOAT3(0.f, 0.f, 1.f)},
-	{DirectX::XMFLOAT3(1.f, -1.f, 0.5f), DirectX::XMFLOAT3(1.f, 1.f, 0.f)},
-	{DirectX::XMFLOAT3(-1.f, 1.f, 0.5f), DirectX::XMFLOAT3(0.f, 1.f, 1.f)},
-	{DirectX::XMFLOAT3(1.f, 1.f, 0.5f), DirectX::XMFLOAT3(1.f, 0.f, 1.f)},
-
 };
 
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -94,70 +84,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	auto swapchain = renderCtx->CreateSwapchain(window, 2, kWindowWidth, kWindowHeight);
 
-	// auto create render target resource
-	auto renderTarget = resourceManager->CreateTexture(
-		DXGI_FORMAT_R8G8B8A8_UNORM,
-		kWindowWidth,
-		kWindowHeight,
-		1,
-		1,
-		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-
-	// create VB for triangle
-	auto vertexBuffer = resourceManager->CreateVertexBuffer(sizeof(kVertices), [&](std::span<uint8_t> mappedBuffer) {
-		memcpy(mappedBuffer.data(), kVertices, mappedBuffer.size_bytes());
-	});
-
-	std::shared_ptr<hvk::render::shader::ShaderService> shaderService = hvk::render::shader::ShaderService::Initialize();
-
-	ComPtr<IDxcBlob> vertexByteCode;
-	ComPtr<IDxcBlob> pixelByteCode;
-
-	hvk::render::shader::ShaderDefinition vertexShaderDef{
-		L"testshaders\\vertex.hlsl",
-		L"main",
-		L"vs_6_3"
-	};
-	hvk::render::shader::ShaderDefinition pixelShaderDef{
-		L"testshaders\\pixel.hlsl",
-		L"main",
-		L"ps_6_3"
-	};
-
-	D3D12_INPUT_ELEMENT_DESC vertexInputs[] = {
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 3 * sizeof(float), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-	};
-	D3D12_INPUT_LAYOUT_DESC vertexLayout{
-		vertexInputs,
-		_countof(vertexInputs)
-	};
-
-	auto hr = shaderService->CompileShader(vertexShaderDef, &vertexByteCode);
-	hr = shaderService->CompileShader(pixelShaderDef, &pixelByteCode);
-
-	// create root sig
-	ComPtr<ID3D12RootSignature> rootSig;
-	{
-		hr = hvk::render::CreateRootSignature(renderCtx->GetDevice(), {}, {}, rootSig);
-	}
-
-	// create PSO
-	ComPtr<ID3D12PipelineState> pso;
-	{
-		hr = hvk::render::CreateGraphicsPipelineState(
-			renderCtx->GetDevice(),
-			vertexLayout,
-			rootSig,
-			std::span<uint8_t>(reinterpret_cast<uint8_t*>(vertexByteCode->GetBufferPointer()), vertexByteCode->GetBufferSize()),
-			std::span<uint8_t>(reinterpret_cast<uint8_t*>(pixelByteCode->GetBufferPointer()), pixelByteCode->GetBufferSize()),
-			pso
-		);
-
-	}
-
-	// create ExecutionContext
-	auto executionContext = std::make_shared<hvk::render::ExecutionContext>(pso, rootSig, vertexByteCode, pixelByteCode);
+	hvk::render::sample::DrawQuadNode drawQuadNode(*renderCtx, *resourceManager);
+	hvk::render::sample::DrawCubeNode drawCubeNode(*renderCtx, *resourceManager);
 
 	MSG msg;
 	bool running = true;
@@ -176,99 +104,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 
-		//if (framecount == 0) {
-		//	PIXCaptureParameters captureParams = {};
-		//	captureParams.GpuCaptureParameters.FileName = L"C://Users//timot//code//test.wpix";
-		//	PIXBeginCapture(PIX_CAPTURE_GPU, &captureParams);
-		//}
+		if (framecount == 0) {
+			PIXCaptureParameters captureParams = {};
+			captureParams.GpuCaptureParameters.FileName = L"C://Users//timot//code//test.wpix";
+			PIXBeginCapture(PIX_CAPTURE_GPU, &captureParams);
+		}
 
 		framegraph.BeginFrame();
 
 		// insert pass
-		framegraph.Insert({ renderTarget }, { vertexBuffer }, {}, executionContext, [&](
-			//const hvk::render::RenderContext& ctx,
-			ComPtr<ID3D12GraphicsCommandList4> commandList,
-			const hvk::render::ExecutionContext& context,
-			const hvk::render::ResourceMapping& renderTargets,
-			const hvk::render::ResourceMapping& inputs,
-			const hvk::render::ResourceMapping& outputs) {
+		drawQuadNode.Draw(*renderCtx, framegraph, descriptorAllocator);
+		drawCubeNode.Draw(*renderCtx, framegraph, descriptorAllocator, drawQuadNode.GetQuadTexture(), swapchain, frameIndex);
 
-				std::cout << "In frame node callback" << std::endl;
-
-				D3D12_VIEWPORT viewport = {};
-				viewport.Width = kWindowWidth;
-				viewport.Height = kWindowHeight;
-				viewport.TopLeftX = 0.f;
-				viewport.TopLeftY = 0.f;
-				viewport.MinDepth = 0.f;
-				viewport.MaxDepth = 1.f;
-
-				D3D12_RECT scissor = {};
-				scissor.left = 0;
-				scissor.right = kWindowWidth;
-				scissor.top = 0;
-				scissor.bottom = kWindowHeight;
-
-				commandList->SetPipelineState(context.mPipelineState.Get());
-				commandList->SetGraphicsRootSignature(context.mRootSig.Get());
-				commandList->RSSetViewports(1, &viewport);
-				commandList->RSSetScissorRects(1, &scissor);
-
-				auto descriptorAllocation = descriptorAllocator.AllocDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
-				//auto resolvedRT = renderTargets.at(renderTarget);
-				//renderCtx->GetDevice()->CreateRenderTargetView(resolvedRT.mResolvedResource.Get(), nullptr, descriptorAllocation.mPointer.mCpuHandle);
-				//const float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.f };
-				//commandList->ClearRenderTargetView(descriptorAllocation.mPointer.mCpuHandle, clearColor, 0, nullptr);
-
-				//commandList->OMSetRenderTargets(1, &descriptorAllocation.mPointer.mCpuHandle, false, nullptr);
-
-				ComPtr<ID3D12Resource> swapchainRT;
-				swapchain->GetBuffer(frameIndex, IID_PPV_ARGS(&swapchainRT));
-				renderCtx->GetDevice()->CreateRenderTargetView(swapchainRT.Get(), nullptr, descriptorAllocation.mPointer.mCpuHandle);
-				commandList->OMSetRenderTargets(1, &descriptorAllocation.mPointer.mCpuHandle, false, nullptr);
-
-				{
-					D3D12_RESOURCE_BARRIER backbuffer = {};
-					backbuffer.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-					backbuffer.Transition.pResource = swapchainRT.Get();
-					backbuffer.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-					backbuffer.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
-					backbuffer.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-					commandList->ResourceBarrier(1, &backbuffer);
-				}
-
-				const float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.f };
-				commandList->ClearRenderTargetView(descriptorAllocation.mPointer.mCpuHandle, clearColor, 0, nullptr);
-
-
-				D3D12_VERTEX_BUFFER_VIEW vbView;
-				vbView.BufferLocation = inputs.at(vertexBuffer).mResolvedResource->GetGPUVirtualAddress();
-				vbView.StrideInBytes = sizeof(DirectX::XMFLOAT3) * 2;
-				vbView.SizeInBytes = sizeof(kVertices);
-				commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-				commandList->IASetVertexBuffers(0, 1, &vbView);
-
-				commandList->DrawInstanced(kNumVertices, 1, 0, 0);
-
-				{
-					D3D12_RESOURCE_BARRIER present = {};
-					present.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-					present.Transition.pResource = swapchainRT.Get();
-					present.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-					present.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-					present.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-					commandList->ResourceBarrier(1, &present);
-				}
-
-		});
-
-		framegraph.EndFrame();
+		framegraph.EndFrame(descriptorAllocator);
 
 		swapchain->Present(1, 0);
 
-		//if (framecount == 0) {
-		//	PIXEndCapture(false);
-		//}
+		if (framecount == 0) {
+			PIXEndCapture(false);
+		}
 
 		frameIndex = swapchain->GetCurrentBackBufferIndex();
 		++framecount;

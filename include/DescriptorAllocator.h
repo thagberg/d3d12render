@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Render.h"
 #include "RenderContext.h"
 
@@ -47,6 +49,8 @@ namespace hvk
 			DescriptorAllocator(DescriptorAllocator&&) = delete;
 
 			DescriptorAllocation AllocDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE descriptorType, uint32_t num);
+
+			ComPtr<ID3D12DescriptorHeap> GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE);
 		private:
 			HeapWrapper mMiscHeap;
 			HeapWrapper mRTVHeap;

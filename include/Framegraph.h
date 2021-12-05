@@ -7,6 +7,7 @@
 #include "ResourceManager.h"
 #include "RenderContext.h"
 #include "ExecutionContext.h"
+#include "DescriptorAllocator.h"
 
 namespace hvk
 {
@@ -48,7 +49,7 @@ namespace hvk
 				std::vector<ResourceHandle> passOutputs, 
 				std::shared_ptr<ExecutionContext> executionContext,
 				RenderPassCallback);
-			void EndFrame();
+			void EndFrame(DescriptorAllocator& descriptorAllocator);
 			
 		private:
 			std::shared_ptr<RenderContext> mRenderContext;

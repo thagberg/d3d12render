@@ -118,6 +118,55 @@ namespace hvk
 			return newHandle;
 		}
 
+		ResourceHandle ResourceManager::CreateIndexBuffer(std::span<const uint16_t> indices)
+		{
+			ResourceHandle newHandle = mLastHandle++;
+
+			D3D12MA::ALLOCATION_DESC allocDesc = {};
+			allocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+
+			D3D12_RESOURCE_DESC uploadDesc = {};
+			uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			uploadDesc.Alignment = 0;
+			uploadDesc.Width = indices.size_bytes();
+			uploadDesc.Height = 1;
+			uploadDesc.DepthOrArraySize = 1;
+			uploadDesc.MipLevels = 1;
+			uploadDesc.Format = DXGI_FORMAT_UNKNOWN;
+			uploadDesc.SampleDesc.Count = 1;
+			uploadDesc.SampleDesc.Quality = 0;
+			uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			uploadDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+			CopyDescription toCopy = {};
+			toCopy.mType = ResourceType::IndexBuffer;
+			toCopy.mHandle = newHandle;
+
+			HRESULT hr = mRenderContext->GetAllocator().CreateResource(
+				&allocDesc,
+				&uploadDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				&toCopy.mUploadAllocation,
+				IID_PPV_ARGS(&toCopy.mUploadResource)
+			);
+			assert(SUCCEEDED(hr));
+
+			D3D12_RANGE readRange = {};
+			readRange.Begin = 0;
+			readRange.End = 0;
+
+			uint16_t* ibBegin;
+			toCopy.mUploadResource->Map(0, &readRange, reinterpret_cast<void**>(&ibBegin));
+			memcpy(ibBegin, indices.data(), indices.size_bytes());
+
+			toCopy.mUploadResource->Unmap(0, nullptr);
+
+			mCopyResources.push_back(toCopy);
+
+			return newHandle;
+		}
+
 		ResourceDescription* ResourceManager::ResolveResource(ResourceHandle handle, bool uavRequired)
 		{
 			auto foundResource = mResources.find(handle);

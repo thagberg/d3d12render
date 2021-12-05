@@ -139,5 +139,20 @@ namespace hvk
 
 			return newAllocation;
 		}
+
+		ComPtr<ID3D12DescriptorHeap> DescriptorAllocator::GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE descriptorType)
+		{
+			switch (descriptorType)
+			{
+			case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+				return mMiscHeap.mHeap;
+			case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+				return mSamplerHeap.mHeap;
+			case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:
+				return mRTVHeap.mHeap;
+			default:
+				return nullptr;
+			}
+		}
 	}
 }

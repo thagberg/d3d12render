@@ -217,7 +217,7 @@ namespace hvk
 
 			ComPtr<ID3DBlob> signature;
 			ComPtr<ID3DBlob> error;
-			D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+			hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
 			hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rsOut));
 
 			return hr;
