@@ -206,6 +206,7 @@ namespace hvk
 			DrawCubeNode::~DrawCubeNode()
 			{
 				mConstantBuffer.mBufferResource->Unmap(0, nullptr);
+				mConstantBuffer.mAllocation->Release();
 			}
 
 			void DrawCubeNode::Draw(
